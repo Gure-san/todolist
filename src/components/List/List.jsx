@@ -69,7 +69,7 @@ function reducer(state, { type, payload }) {
 
     //Dispath Data List Event
     case HANDLE_CASE.GET:
-      const reCreatedData = payload.dataLocal.map((list) => ({
+      const listData_get = payload.dataLocal.map((list) => ({
         id: getUniqueId(),
         ...list,
       }));
@@ -77,23 +77,26 @@ function reducer(state, { type, payload }) {
       return {
         ...state,
         listName: "",
-        listData: reCreatedData,
+        listData: listData_get,
         fetchDataLocalComplete: true,
         dispatchDataList : () => {
           payload.dispatchApp({
             type : SECTION_COMPONENT.LIST,
-            payload : getSelectedList(reCreatedData)
+            payload : {
+              currentList : getSelectedList(listData_get),
+              listDataFull : listData_get
+            }
           })
         },
       };
 
     //Dispath Data List Event
     case HANDLE_CASE.DELETE:
-      const filteredData = state.listData.filter(({ id }) => id !== payload.idForDelete);
+      const listData_delete = state.listData.filter(({ id }) => id !== payload.idForDelete);
 
       saveSectionDataToLocale({
         section: SECTION_COMPONENT.LIST,
-        value: filteredData,
+        value: listData_delete,
       });
 
       // Task Checker 
@@ -109,11 +112,18 @@ function reducer(state, { type, payload }) {
 
       return {
         ...state,
-        listData: filteredData,
+        listData: listData_delete,
         dispatchDataList : () => {
           payload.dispatchApp({
             type : SECTION_COMPONENT.LIST,
-            payload : getSelectedList(filteredData)
+            payload : {
+              currentList : getSelectedList(listData_delete),
+              listDataFull : {
+                listData : listData_delete,
+                trash_idDeletedList : payload.idForDelete,
+                eventIndicator : HANDLE_CASE.DELETE
+              }
+            }
           })
         },
       };
@@ -122,24 +132,31 @@ function reducer(state, { type, payload }) {
     case HANDLE_CASE.EDIT:
       if (state.editModeState && payload.changeListData) {
         const { value, listData, dispatchApp } = payload;
-        const editListData = reCreateData({
+        const listData_edit = reCreateData({
           type: HANDLE_CASE.EDIT,
           payload: { value, listData, id: state.currentIdSelectedList },
         });
 
         saveSectionDataToLocale({
           section: SECTION_COMPONENT.LIST,
-          value: editListData,
+          value: listData_edit,
         });
 
         return {
           ...state,
           listName: "",
-          listData: editListData,
+          listData: listData_edit,
           dispatchDataList : () => {
             dispatchApp({
               type : SECTION_COMPONENT.LIST,
-              payload : getSelectedList(editListData)
+              payload : {
+                currentList : getSelectedList(listData_edit),
+                listDataFull : {
+                  listData : listData_edit,
+                  idEditedList : state.currentIdSelectedList,
+                  eventIndicator : HANDLE_CASE.EDIT
+                }
+              }
             })
           },
           editModeState: false,
@@ -160,7 +177,7 @@ function reducer(state, { type, payload }) {
     //Dispath Data List Event
     case HANDLE_CASE.SELECT:
       const { listData, selectedList, dispatchApp } = payload;
-      const dataWithSelectedList = reCreateData({
+      const listData_select = reCreateData({
         type: HANDLE_CASE.SELECT,
         payload: {
           listData,
@@ -172,27 +189,28 @@ function reducer(state, { type, payload }) {
 
       saveSectionDataToLocale({
         section: SECTION_COMPONENT.LIST,
-        value: dataWithSelectedList,
+        value: listData_select,
       });
 
       return {
         ...state,
-        listData: dataWithSelectedList,
+        listData: listData_select,
         prevSelectedList: selectedList,
         editModeState: false,
         currentIdSelectedList: payload.id,
         dispatchDataList : () => {
           dispatchApp({
             type : SECTION_COMPONENT.LIST,
-            payload : getSelectedList(dataWithSelectedList)
+            payload : {
+              currentList : getSelectedList(listData_select),
+              listDataFull : listData_select,
+            }
           })
         },
       };
 
     //Dispath Data List Event
     case HANDLE_CASE.CLEAR:
-      if (!state.listData.length) return state;
-  
       deleteFromLocale(KEY_STORE);
       return {
         ...state,
@@ -201,7 +219,14 @@ function reducer(state, { type, payload }) {
         dispatchDataList : () => {
           payload.dispatchApp({
             type : SECTION_COMPONENT.LIST,
-            payload : []
+            payload : {
+              currentList : [],
+              listDataFull : {
+                listData : [],
+                trash_idDeletedList : [],
+                eventIndicator : HANDLE_CASE.CLEAR
+              }
+            }
           })
         }
       };

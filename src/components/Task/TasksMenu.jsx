@@ -3,7 +3,7 @@ import DefaultTaskPlaceholder from './DefaultTaskPlaceholder';
 import { HANDLE_CASE } from './Task';
 
 export default function TasksMenu({ taskData, currentList, dispatch }) {
-  const filteredTaskData = (taskData !== null && currentList !== null) ? taskData.filter(task => {
+  const filteredTaskData = (taskData && taskData.length && currentList) ? taskData.filter(task => {
     if(task.id !== currentList.id) return null;
     return task;
   })[0] : null;

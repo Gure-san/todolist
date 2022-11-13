@@ -18,7 +18,6 @@ import {
 import TasksMenu from "./TasksMenu";
 import TasksInfo from "./TasksInfo";
 
-
 const INITIAL_STATE = {
   taskName : "",
   taskData : [],
@@ -52,10 +51,11 @@ function reducer(state, {type, payload}) {
       };
 
       const {currentList, taskName} = payload;
+
       // Check Previous Task Data
-      if(state.taskData && state.taskData.length !== 0 && state.taskData.some((data) => data.id === currentList.id && data.listName === currentList.listName)) {
+      if(state.taskData && state.taskData.length !== 0 && state.taskData.some((data) => data.id === currentList.id)) {
         const taskData_add = state.taskData.map(data => {
-          if(data.listName === currentList.listName && data.id === currentList.id) {
+          if(data.id === currentList.id) {
             const newTask = {
               taskName,
               complete : false,
@@ -150,6 +150,11 @@ function reducer(state, {type, payload}) {
         return result;
       });
 
+      saveSectionDataToLocale({
+        section : SECTION_COMPONENT.TASK,
+        value : taskData_delete
+      })
+
       return {
         ...state,
         taskData : taskData_delete
@@ -182,6 +187,8 @@ function reducer(state, {type, payload}) {
 
     // Selected List
     case HANDLE_CASE.GET :
+      const {currentDataList, listDataFull} = payload;
+
       if(!state.fetchDataFromLocalComplete) {
         const taskData_get = getFromLocale(KEY_STORE);
         if(taskData_get && taskData_get['task']) {
@@ -193,16 +200,80 @@ function reducer(state, {type, payload}) {
             fetchDataFromLocalComplete : true
           }
         }
+
+        return {
+          ...state,
+          selectedListName : "",
+          fetchDataFromLocalComplete : true,
+        }
       }
 
-      if(payload === null) return {
+      // Synchronize Task Data with List Data
+      if(listDataFull && !Array.isArray(listDataFull) && listDataFull.eventIndicator) {
+        // Remove List Data
+        if(listDataFull.eventIndicator === HANDLE_CASE.DELETE || listDataFull.eventIndicator === HANDLE_CASE.CLEAR) {
+          const {listData, trash_idDeletedList} = listDataFull;  
+
+          // Clear Action || Empty Task Data
+          if(!listData.length || !state.taskData.length) {
+            return {
+              ...state,
+              selectedListName : "",
+              taskName : "",
+              taskData : []
+            }
+          }
+
+          // Delete Action
+          const taskData_removeDataList = state.taskData.filter(({id}) => id !== trash_idDeletedList);
+          
+          saveSectionDataToLocale({
+            section : SECTION_COMPONENT.TASK,
+            value : taskData_removeDataList
+          });
+
+          return {
+            ...state,
+            selectedListName : "",
+            taskData : taskData_removeDataList
+          }
+        }
+
+        // Edit List Data
+        if(listDataFull.eventIndicator === HANDLE_CASE.EDIT) {
+          const {listData, idEditedList} = payload.listDataFull;
+          const taskData_editedList = state.taskData.map(data => {
+            if(data.id === idEditedList) {
+              const listNameOfeditedList = listData.filter(({id}) => id === idEditedList)[0]['listName'];
+              data.listName = listNameOfeditedList;
+            }
+
+            return data;
+          });
+
+          saveSectionDataToLocale({
+            section : SECTION_COMPONENT.TASK,
+            value : taskData_editedList
+          });
+
+          console.log(state.taskData)
+
+          return {
+            ...state,
+            selectedListName : "",
+            taskData : taskData_editedList
+          }
+        }
+      }
+      
+      if(!currentDataList) return {
         ...state,
         selectedListName : ""
       }
 
       return {
         ...state,
-        selectedListName : payload.listName
+        selectedListName : currentDataList.listName
       }
     
     default :
@@ -210,15 +281,18 @@ function reducer(state, {type, payload}) {
   }
 }
 
-function Task({ dispatchTask, dataList }) {
+function Task({ dispatchTask, currentDataList, listDataFull }) {
   const [{selectedListName, taskName, taskData, editModeState}, setTaskData] = useReducer(reducer, INITIAL_STATE);
   
   useEffect(() => {
     setTaskData({
       type : HANDLE_CASE.GET,
-      payload : dataList
+      payload : {
+        currentDataList,
+        listDataFull
+      }
     });
-  }, [dataList]);
+  }, [currentDataList, listDataFull]);
 
   return (
     <div className="m-8">
@@ -232,21 +306,20 @@ function Task({ dispatchTask, dataList }) {
       </h1>
 
       {/* Task Menu */}
-      <TasksMenu taskData={taskData} currentList={dataList} dispatch={setTaskData} />
+      <TasksMenu taskData={taskData} currentList={currentDataList} dispatch={setTaskData} />
 
       {/* Tasks Info */}
-      <TasksInfo taskData={taskData} currentList={dataList}/>
+      <TasksInfo taskData={taskData} currentList={currentDataList}/>
 
       {/* Task Form */}
       <form
         className="flex"
         onSubmit={(e) => {
           e.preventDefault();
-          console.log(dataList)
           setTaskData({
             type : HANDLE_CASE.ADD,
             payload : {
-              currentList : dataList,
+              currentList : currentDataList,
               taskName
             }
           })
@@ -270,16 +343,16 @@ function Task({ dispatchTask, dataList }) {
         </label>
 
         <SubmitTaskFormButton dispatch={setTaskData} payload={{ 
-          currentList : dataList,
+          currentList : currentDataList,
           taskName
         }}/>
       </form>
 
       {/* Clear All Task */}
-      <ClearTaskButton dispatch={setTaskData} payload={dataList}/>
+      <ClearTaskButton dispatch={setTaskData} payload={currentDataList}/>
 
       {/* Delete All Selected Tasks */}
-      <DeleteTaskButton dispatch={setTaskData} payload={dataList}/>
+      <DeleteTaskButton dispatch={setTaskData} payload={currentDataList}/>
     </div>
   )
 }

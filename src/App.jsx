@@ -5,21 +5,21 @@ import { Task } from "./components/Task";
 import { SECTION_COMPONENT } from './provider';
 
 const INITIAL_STATE = {
-  selectedListData : null,
-  selectedTaskData : null
+  LIST_DATA : null,
+  TASK_DATA : null
 }
 
 function reducer(state, {type, payload}) {
   switch(type) {
     case SECTION_COMPONENT.LIST : 
-      if(!payload.length) return {
-        ...state,
-        selectedListData : null
-      }
+      const {currentList, listDataFull} = payload;
 
       return {
         ...state,
-        selectedListData : payload[0]
+        LIST_DATA : {
+          currentList : currentList.length ? currentList[0] : null,
+          listDataFull
+        },
       }
 
     case SECTION_COMPONENT.TASK : 
@@ -30,13 +30,14 @@ function reducer(state, {type, payload}) {
 }
 
 function App() {
-  const [{ selectedListData, selectedTaskData }, setSelectedData] = useReducer(reducer, INITIAL_STATE);
+  const [{ LIST_DATA, TASK_DATA }, setSelectedData] = useReducer(reducer, INITIAL_STATE);
 
   return (
     <React.Fragment>
       <List dispatchApp={setSelectedData}/>
       <Task 
-      dataList={selectedListData}
+      listDataFull={!LIST_DATA ? LIST_DATA : LIST_DATA.listDataFull}
+      currentDataList={!LIST_DATA ? LIST_DATA : LIST_DATA.currentList}
       dispatchTask={setSelectedData}/>
     </React.Fragment>
   )
