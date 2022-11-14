@@ -285,7 +285,7 @@ function List({ dispatchApp }) {
         <DefaultListPlaceholder />
       ) : (
         <ul className="my-4" id="ListContainer">
-          {listData.map(({ id, listName, active }) => (
+          {listData.map(({ id, listName, active, date }) => (
             <li key={id}>
               <label
                 className="selection:bg-transparent"
@@ -307,7 +307,7 @@ function List({ dispatchApp }) {
                     })
                   }
                 />
-                {listName}
+                {listName} - {date}
 
                 {/* Action Buttons */}
                 {active && (
