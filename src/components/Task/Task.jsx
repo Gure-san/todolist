@@ -283,7 +283,7 @@ function reducer(state, {type, payload}) {
 
 function Task({ dispatchTask, currentDataList, listDataFull }) {
   const [{selectedListName, taskName, taskData, editModeState}, setTaskData] = useReducer(reducer, INITIAL_STATE);
-  
+
   useEffect(() => {
     setTaskData({
       type : HANDLE_CASE.GET,
@@ -349,7 +349,7 @@ function Task({ dispatchTask, currentDataList, listDataFull }) {
       </form>
 
       {/* Clear All Task */}
-      <ClearTaskButton dispatch={setTaskData} payload={currentDataList}/>
+      <ClearTaskButton dispatch={setTaskData} payload={currentDataList} taskData={taskData}/>
 
       {/* Delete All Selected Tasks */}
       <DeleteTaskButton dispatch={setTaskData} payload={currentDataList}/>

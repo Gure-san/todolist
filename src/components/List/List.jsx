@@ -13,6 +13,7 @@ import {
   getUniqueId,
   getSelectedList,
   saveSectionDataToLocale,
+  getDate
 } from "../../provider";
 import { 
   reCreateData,
@@ -33,10 +34,15 @@ const HANDLE_CASE = {
   DELETE: "handle_delete",
   CLEAR: "handle_clear",
   GET: "handle_getFromLocale",
+  DEBUG : 'handle_debug'
 };
 
 function reducer(state, { type, payload }) {
   switch (type) {
+    case HANDLE_CASE.DEBUG : 
+      console.log(payload)
+      return state;
+
     case HANDLE_CASE.CHANGE:
       return {
         ...state,
@@ -52,6 +58,7 @@ function reducer(state, { type, payload }) {
           id: getUniqueId(),
           active: false,
           listName: payload,
+          date : getDate()
         },
       ];
 
@@ -379,7 +386,7 @@ function List({ dispatchApp }) {
       </form>
 
       {/* Clear List Menu */}
-      <ClearListButton dispatch={{ setListsData, dispatchApp }} />
+      <ClearListButton dispatch={{ setListsData, dispatchApp }} listData={listData}/>
     </div>
   );
 }
