@@ -1,12 +1,37 @@
 import { useEffect, useState } from "react";
 import ReactDOM from 'react-dom';
-import { Temporal } from "@js-temporal/polyfill";
+import { Temporal, toTemporalInstant } from "@js-temporal/polyfill";
 
 const KEY_STORE = "advancedTodoList";
 const SECTION_COMPONENT = {
+  APP : 'app',
   LIST : 'list',
-  TASK : 'task'
+  TASK : 'task',
 }
+
+const THEME_VARIANTS = {
+  DARK_MODE : 'dark',
+  LIGHT_MODE : 'light'
+}
+
+const INITIAL_APP_CONFIG = {
+  theme : THEME_VARIANTS.DARK_MODE,
+  swapComponentPosition : false,
+  noDialog : {
+    section : {
+      list : false,
+      task : false
+    }
+  } 
+}
+
+const CONFIG_ACTIONS = {
+  THEME : 'theme',
+  SWAP : 'swap',
+  NO_DIALOG : 'noDialog',
+  INITIAL_CHECK_DATA_LOCAL : 'check_data_local'
+}
+
 
 const iterationUniqueId = (() => {
   let numb = 0;
@@ -24,11 +49,61 @@ function saveData(obj) {
   return localStorage.setItem(KEY_STORE, objToString);
 }
 
+function themeInitializer(appData) {
+  const { theme } = appData;
+  const topLevelElement = document.documentElement;
+  const rootElement = document.getElementById('root');
+  document.body.className = 'bg-tertiary-100 dark:bg-primary duration-300';
+  rootElement.className = 'max-w-[768px] mx-auto px-6 bg-inherit';
+
+  switch(theme) {
+    case THEME_VARIANTS.DARK_MODE : 
+      if(topLevelElement.classList.contains(THEME_VARIANTS.LIGHT_MODE)) {
+        return topLevelElement.classList.replace(
+          THEME_VARIANTS.LIGHT_MODE,
+          THEME_VARIANTS.DARK_MODE
+          );
+        }
+        
+      return topLevelElement.classList.add(THEME_VARIANTS.DARK_MODE); 
+      
+    case THEME_VARIANTS.LIGHT_MODE : 
+      if(topLevelElement.classList.contains(THEME_VARIANTS.DARK_MODE)) {
+        return topLevelElement.classList.replace(
+          THEME_VARIANTS.DARK_MODE,
+          THEME_VARIANTS.LIGHT_MODE
+        );
+      }
+        
+      return topLevelElement.classList.add(THEME_VARIANTS.LIGHT_MODE); 
+  }
+}
+
 function saveSectionDataToLocale({ section, value }) {
   const prevStoredData = getFromLocale(KEY_STORE);
   switch(section) {
+    case SECTION_COMPONENT.APP : 
+      const dataFromApp = {
+        app : value,
+        list : (prevStoredData && prevStoredData.list) ? [...prevStoredData.list] : null,
+        task : (prevStoredData && prevStoredData.task) ? [...prevStoredData.task] : null
+      }
+
+      return saveData(dataFromApp);
+
     case SECTION_COMPONENT.LIST : 
+      if(!value) {
+        const dataFromList = {
+          app : {...prevStoredData.app},
+          list : null,
+          task : null
+        };
+
+        return saveData(dataFromList);
+      }
+
       const dataFromList = {
+        app : {...prevStoredData.app},
         list : value,
         task : (prevStoredData && prevStoredData.task) ? [...prevStoredData.task] : null
       }
@@ -37,6 +112,7 @@ function saveSectionDataToLocale({ section, value }) {
 
     case SECTION_COMPONENT.TASK :
       const dataFromTask = {
+        app : {...prevStoredData.app},
         list : (prevStoredData && prevStoredData.list) ? [...prevStoredData.list] : null,
         task : value
       }
@@ -58,7 +134,6 @@ function getSelectedList(dataList) {
 
   return result;
 }
-
 
 function deleteFromLocale(key) {
   return localStorage.removeItem(key);
@@ -159,6 +234,10 @@ function getDate() {
 export {
   KEY_STORE,
   SECTION_COMPONENT,
+  THEME_VARIANTS,
+  INITIAL_APP_CONFIG,
+  CONFIG_ACTIONS,
+  themeInitializer,
   getUniqueId,
   saveSectionDataToLocale,
   getFromLocale,
