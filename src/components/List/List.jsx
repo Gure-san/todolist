@@ -1,12 +1,6 @@
 import React, { useEffect, useReducer, useRef } from "react";
-import DefaultListPlaceholder from "./DefaultListPlaceholder";
-import ListHead from './Head/ListHead';
+import ListHead from "./Head/ListHead";
 import ListBody from "./Body/ListBody";
-import {
-  ActionListButtons,
-  SubmitListFormButton,
-  ClearListButton,
-} from "./ListActionButtons";
 import {
   KEY_STORE,
   SECTION_COMPONENT,
@@ -15,21 +9,16 @@ import {
   getUniqueId,
   getSelectedList,
   saveSectionDataToLocale,
-  getDate
+  getDate,
 } from "../../provider";
-import { 
-  reCreateData,
-} from "./methods";
-
-import EmptyListCover from './Body/EmptyListCover';
-
+import { reCreateData } from "./methods";
 
 const INITIAL_STATE = {
   listName: "",
   listData: [],
   editModeState: false,
   dispatchDataList: false,
-  fetchDataLocalComplete: false
+  fetchDataLocalComplete: false,
 };
 const HANDLE_CASE = {
   CHANGE: "handle_change",
@@ -58,7 +47,7 @@ function reducer(state, { type, payload }) {
           id: getUniqueId(),
           active: false,
           listName: payload,
-          date : getDate()
+          date: getDate(),
         },
       ];
 
@@ -71,7 +60,7 @@ function reducer(state, { type, payload }) {
         ...state,
         listName: "",
         listData: data,
-        dispatchDataList : false
+        dispatchDataList: false,
       };
 
     //Dispath Data List Event
@@ -86,52 +75,56 @@ function reducer(state, { type, payload }) {
         listName: "",
         listData: listData_get,
         fetchDataLocalComplete: true,
-        dispatchDataList : () => {
+        dispatchDataList: () => {
           payload.dispatchApp({
-            section : SECTION_COMPONENT.LIST,
-            payload : {
-              currentList : getSelectedList(listData_get),
-              listDataFull : listData_get
-            }
-          })
+            section: SECTION_COMPONENT.LIST,
+            payload: {
+              currentList: getSelectedList(listData_get),
+              listDataFull: listData_get,
+            },
+          });
         },
       };
 
     //Dispath Data List Event
     case HANDLE_CASE.DELETE:
-      const listData_delete = state.listData.filter(({ id }) => id !== payload.idForDelete);
+      const listData_delete = state.listData.filter(
+        ({ id }) => id !== payload.idForDelete
+      );
 
       saveSectionDataToLocale({
         section: SECTION_COMPONENT.LIST,
         value: listData_delete,
       });
 
-      // Task Checker 
-      const taskData = getFromLocale(KEY_STORE)['task'];
-      if(taskData) {
-        const residualData = taskData.filter(({id}) => id !== payload.idForDelete);
+      // Task Checker
+      const taskData = getFromLocale(KEY_STORE)["task"];
+      if (taskData) {
+        const residualData = taskData.filter(
+          ({ id }) => id !== payload.idForDelete
+        );
 
         saveSectionDataToLocale({
-          section : SECTION_COMPONENT.TASK,
-          value: residualData.length ? residualData : null
-        })
+          section: SECTION_COMPONENT.TASK,
+          value: residualData.length ? residualData : null,
+        });
       }
 
       return {
         ...state,
         listData: listData_delete,
-        dispatchDataList : () => {
+        dispatchDataList: () => {
           payload.dispatchApp({
-            section : SECTION_COMPONENT.LIST,
-            payload : {
-              currentList : getSelectedList(listData_delete),
-              listDataFull : {
-                listData : listData_delete,
-                trash_idDeletedList : payload.idForDelete,
-                eventIndicator : HANDLE_CASE.DELETE
-              }
-            }
-          })
+            section: SECTION_COMPONENT.LIST,
+            payload: {
+              currentList: getSelectedList(listData_delete),
+              listDataFull: {
+                listData: listData_delete,
+                trash_idDeletedList: payload.idForDelete,
+                eventIndicator: HANDLE_CASE.DELETE,
+              },
+            },
+          });
         },
       };
 
@@ -153,18 +146,18 @@ function reducer(state, { type, payload }) {
           ...state,
           listName: "",
           listData: listData_edit,
-          dispatchDataList : () => {
+          dispatchDataList: () => {
             dispatchApp({
-              section : SECTION_COMPONENT.LIST,
-              payload : {
-                currentList : getSelectedList(listData_edit),
-                listDataFull : {
-                  listData : listData_edit,
-                  idEditedList : state.currentIdSelectedList,
-                  eventIndicator : HANDLE_CASE.EDIT
-                }
-              }
-            })
+              section: SECTION_COMPONENT.LIST,
+              payload: {
+                currentList: getSelectedList(listData_edit),
+                listDataFull: {
+                  listData: listData_edit,
+                  idEditedList: state.currentIdSelectedList,
+                  eventIndicator: HANDLE_CASE.EDIT,
+                },
+              },
+            });
           },
           editModeState: false,
         };
@@ -173,7 +166,7 @@ function reducer(state, { type, payload }) {
       return {
         ...state,
         listName: payload.listName,
-        dispatchDataList : false,
+        dispatchDataList: false,
         editModeState: {
           editMode: true,
           changeListData: false,
@@ -205,41 +198,41 @@ function reducer(state, { type, payload }) {
         prevSelectedList: selectedList,
         editModeState: false,
         currentIdSelectedList: payload.id,
-        dispatchDataList : () => {
+        dispatchDataList: () => {
           dispatchApp({
-            section : SECTION_COMPONENT.LIST,
-            payload : {
-              currentList : getSelectedList(listData_select),
-              listDataFull : listData_select,
-            }
-          })
+            section: SECTION_COMPONENT.LIST,
+            payload: {
+              currentList: getSelectedList(listData_select),
+              listDataFull: listData_select,
+            },
+          });
         },
       };
 
     //Dispath Data List Event
     case HANDLE_CASE.CLEAR:
       saveSectionDataToLocale({
-        section : SECTION_COMPONENT.LIST,
-        value : null
+        section: SECTION_COMPONENT.LIST,
+        value: null,
       });
-      
+
       return {
         ...state,
         listName: "",
         listData: [],
-        dispatchDataList : () => {
+        dispatchDataList: () => {
           payload.dispatchApp({
-            section : SECTION_COMPONENT.LIST,
-            payload : {
-              currentList : [],
-              listDataFull : {
-                listData : [],
-                trash_idDeletedList : [],
-                eventIndicator : HANDLE_CASE.CLEAR
-              }
-            }
-          })
-        }
+            section: SECTION_COMPONENT.LIST,
+            payload: {
+              currentList: [],
+              listDataFull: {
+                listData: [],
+                trash_idDeletedList: [],
+                eventIndicator: HANDLE_CASE.CLEAR,
+              },
+            },
+          });
+        },
       };
 
     default:
@@ -248,26 +241,32 @@ function reducer(state, { type, payload }) {
 }
 
 function List({ dispatchApp, appData }) {
-  const [{ listName, listData, editModeState, dispatchDataList, fetchDataLocalComplete }, setListsData] = useReducer(
-    reducer,
-    INITIAL_STATE
-  );
+  const [
+    {
+      listName,
+      listData,
+      editModeState,
+      dispatchDataList,
+      fetchDataLocalComplete,
+    },
+    setListsData,
+  ] = useReducer(reducer, INITIAL_STATE);
   const inputFormElement = useRef();
 
   useEffect(() => {
     // Dispath data to parent component
-    if(typeof dispatchDataList === 'function' && fetchDataLocalComplete) dispatchDataList();
-
+    if (typeof dispatchDataList === "function" && fetchDataLocalComplete)
+      dispatchDataList();
     // Get data from local storage when page reloading
-    if(!editModeState && !fetchDataLocalComplete) {
+    if (!editModeState && !fetchDataLocalComplete) {
       const dataFromLocale = getFromLocale(KEY_STORE);
-      if (dataFromLocale && dataFromLocale['list']) {
-        setListsData({ 
-          type: HANDLE_CASE.GET, 
+      if (dataFromLocale && dataFromLocale["list"]) {
+        setListsData({
+          type: HANDLE_CASE.GET,
           payload: {
-            dataLocal : dataFromLocale['list'],
-            dispatchApp
-          }
+            dataLocal: dataFromLocale["list"],
+            dispatchApp,
+          },
         });
       }
     }
@@ -283,20 +282,27 @@ function List({ dispatchApp, appData }) {
   return (
     <section className="pb-4">
       {/* List - Head */}
-      <ListHead 
-      appData={appData}
-      dispatch={setListsData}
-      derivedItems={{
-        listData, 
-        listName,
-        editModeState,
-        inputFormElement,
-        dispatchApp
-      }}/>
+      <ListHead
+        appData={appData}
+        dispatch={setListsData}
+        derivedItems={{
+          listData,
+          listName,
+          editModeState,
+          inputFormElement,
+          dispatchApp,
+        }}
+      />
 
       {/* List - Body */}
-      <ListBody />
-
+      <ListBody
+        appData={appData}
+        dispatch={setListsData}
+        derivedItems={{
+          listData,
+          dispatchApp,
+        }}
+      />
 
       {/* {!listData.length ? (
         <EmptyListCover />
@@ -326,8 +332,8 @@ function List({ dispatchApp, appData }) {
                 />
                 {listName} - {date} */}
 
-                {/* Action Buttons */}
-                {/* {active && (
+      {/* Action Buttons */}
+      {/* {active && (
                   <ActionListButtons
                     dispatch={{ setListsData, dispatchApp }}
                     idForDelete={id}
@@ -347,4 +353,4 @@ function List({ dispatchApp, appData }) {
   );
 }
 
-export { List, HANDLE_CASE  }
+export { List, HANDLE_CASE };
