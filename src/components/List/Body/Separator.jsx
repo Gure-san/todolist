@@ -1,33 +1,28 @@
 import { useEffect, useState } from "react";
 import clearDark from "../../../assets/List-Section/clear-dark.png";
 import clearLight from "../../../assets/List-Section/clear-light.png";
-import { ActionsModal } from "../../../provider";
-import { HANDLE_CASE } from "../List";
+import { ActionsModal, MODAL_SECTION, THEME_VARIANTS } from "../../../provider";
+import { HANDLE_CASE } from "../list_fractionCollection";
+import { SEPARATOR_TYPE } from "./body_fractionCollection";
 
 const ICON_SIZE = 16;
 
-const SEPARATOR_TYPE = {
-  NORMAL: "normal",
-  LISTNAME_LISTDATE: "listName_listDate",
-  CLEAR: "clear",
-};
-
-function Separator({ type, extraStyle = "", dispatch, derivedItems }) {
+function Separator({ type, extraStyle, dispatch, derivedItems, theme }) {
   // Functional Confirm Action For Separator Type Clear
-  const [{ openModal, confirm }, setConfirmAction] = useState({
+  const [modalData, setModalData] = useState({
     openModal: false,
     confirm: false,
   });
 
   useEffect(() => {
     // Confirm Clear Action
-    if (confirm) {
+    if (modalData.confirm) {
       dispatch({
         type: HANDLE_CASE.CLEAR,
         payload: { dispatchApp: derivedItems.dispatchApp },
       });
     }
-  }, [openModal]);
+  }, [modalData]);
 
   switch (type) {
     case SEPARATOR_TYPE.NORMAL:
@@ -46,10 +41,11 @@ function Separator({ type, extraStyle = "", dispatch, derivedItems }) {
       return (
         <section className="w-full relative flex justify-center items-center">
           {/* Modal */}
-          {openModal ? (
+          {modalData.openModal ? (
             <ActionsModal
-              isOpen={openModal}
-              modalRegulator={setConfirmAction}
+              isOpen={modalData.openModal}
+              modalRegulator={setModalData}
+              modalSection={MODAL_SECTION.LISTBODY_CLEAR}
             />
           ) : null}
           <hr
@@ -58,21 +54,24 @@ function Separator({ type, extraStyle = "", dispatch, derivedItems }) {
             }`}
           />
           <button
-            onClick={
-              () => console.log("clear button clicked")
-              // setConfirmAction({
-              //   openModal: !openModal,
-              //   confirm: false,
-              // })
+            onClick={() =>
+              setModalData({
+                openModal: !modalData.openModal,
+                confirm: false,
+              })
             }
-            className="dark:bg-secondary-100 dark:hover:bg-secondary-150 dark:border-secondary-150 dark:shadow-primary dark:shadow-[inset_0px_0px_1rem_bg-primary] selection:bg-transparent p-2.5 rounded-full cursor-pointer duration-100 border-2 mr-2.5 active:translate-y-0.5 z-10"
+            className="dark:bg-secondary-100 dark:hover:bg-secondary-150 dark:border-secondary-150 dark:shadow-primary dark:shadow-[inset_0px_0px_1rem_bg-primary] hover:bg-tertiary-150 bg-tertiary-100 border-tertiary-150 shadow-tertiary-150 shadow-[inset_0px_0px_1rem_bg-tertiary-150] selection:bg-transparent p-2.5 rounded-full cursor-pointer duration-100 border-2 mr-2.5 active:translate-y-0.5 z-10"
             type="button"
           >
-            <img src={clearDark} width={ICON_SIZE} height={ICON_SIZE} />
+            <img
+              src={theme === THEME_VARIANTS.DARK_MODE ? clearDark : clearLight}
+              width={ICON_SIZE}
+              height={ICON_SIZE}
+            />
           </button>
         </section>
       );
   }
 }
 
-export { Separator, SEPARATOR_TYPE };
+export { Separator };

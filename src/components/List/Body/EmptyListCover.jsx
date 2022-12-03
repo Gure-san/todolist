@@ -5,7 +5,7 @@ const SIZE_ICON = 80;
 
 export default function EmptyListCover() {
   return (
-    <section className="w-full flex items-center justify-center rounded-md min-h-[300px] bg-secondary-100">
+    <section className="w-full flex items-center justify-center rounded-md min-h-[300px] bg-secondary-100 text-tertiary-100">
       <div className="flex flex-wrap items-end justify-center w-max">
         <img width={SIZE_ICON} height={SIZE_ICON} src={noListCover_dark} />
         <p className="">

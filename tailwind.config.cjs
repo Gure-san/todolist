@@ -1,33 +1,30 @@
 /** @type {import('tailwindcss').Config} */
-const defaultTheme = require('tailwindcss/defaultTheme')
+const defaultTheme = require("tailwindcss/defaultTheme");
 module.exports = {
-  darkMode: 'class',
-  content: [
-    "./index.html",
-    "./src/**/*.{js,jsx}"
-  ],
+  darkMode: "class",
+  content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       fontFamily: {
-        'sans' : ['Roboto', ...defaultTheme.fontFamily.sans]
+        sans: ["Roboto", ...defaultTheme.fontFamily.sans],
       },
       colors: {
-        primary: '#261C2C',
+        primary: "#261C2C",
         secondary: {
-          100 : '#53475A',
-          150 : '#473d4f'
+          100: "#53475A",
+          150: "#473d4f",
         },
         tertiary: {
-          100 : '#FEF7FF',
-          150 : '#dbdbdb'
+          100: "#FEF7FF",
+          150: "#dbdbdb",
         },
         extra: {
-          100 : '#00C9B2',
-          150 : '#C2FCF2'
-        }
-      }
+          100: "#00C9B2",
+          150: "#C2FCF2",
+          900: "#0b070dd9",
+        },
+      },
     },
   },
   plugins: [],
-}
-
+};

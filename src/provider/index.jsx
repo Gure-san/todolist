@@ -1,7 +1,11 @@
-import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { Temporal, toTemporalInstant } from "@js-temporal/polyfill";
-import { HANDLE_CASE_LISTMENU } from "../components/List/Body/ListMenu";
+import { Temporal } from "@js-temporal/polyfill";
+import { HANDLE_CASE_LISTMENU } from "../components/List/Body/body_fractionCollection";
+import { LISTMENU_TYPE } from "../components/List/Body/body_fractionCollection";
+import deleteSingle from "../assets/Modal/deleteSingle.png";
+import deleteAll from "../assets/Modal/deleteAll.png";
+
+const DESKTOP_MINIMUM_SIZE = 769;
 
 const KEY_STORE = "advancedTodoList";
 const SECTION_COMPONENT = {
@@ -15,6 +19,8 @@ const MODAL_SECTION = {
   LISTBODY_CLEAR: "listBody_clear",
 };
 
+const ICON_MODAL_SIZE = 64;
+
 const THEME_VARIANTS = {
   DARK_MODE: "dark",
   LIGHT_MODE: "light",
@@ -22,7 +28,7 @@ const THEME_VARIANTS = {
 
 const INITIAL_APP_CONFIG = {
   theme: THEME_VARIANTS.DARK_MODE,
-  swapComponentPosition: false,
+  switchComponentPosition: false,
   noDialog: {
     section: {
       list: false,
@@ -42,6 +48,33 @@ const iterationUniqueId = (() => {
   let numb = 0;
   return () => (numb += 1);
 })();
+
+function debounce(callback, delay = 2000) {
+  let timeOut;
+  return (arg) => {
+    clearTimeout(timeOut);
+    timeOut = setTimeout(() => {
+      callback(arg);
+    }, delay);
+  };
+}
+
+function sizeObserver(targetToObserve, dispatch) {
+  const debounceUpdater = debounce((type) => dispatch(type));
+  const observer = new ResizeObserver((entries, thisObserver) => {
+    entries.forEach((obj) => {
+      // Mobile Size
+      if (obj.contentRect.width < DESKTOP_MINIMUM_SIZE)
+        debounceUpdater(LISTMENU_TYPE.COLLAPSIBLE);
+
+      // Desktop Size
+      if (obj.contentRect.width > DESKTOP_MINIMUM_SIZE)
+        debounceUpdater(LISTMENU_TYPE.NORMAL);
+    });
+  });
+
+  observer.observe(targetToObserve);
+}
 
 function getUniqueId() {
   const primariNumb = new Date().getMilliseconds();
@@ -157,49 +190,97 @@ function deleteFromLocale(key) {
 }
 
 // Modal
-function ActionsModal({ isOpen, modalRegulator, modalSection, payload }) {
+function ActionsModal({
+  isOpen,
+  modalRegulator,
+  modalSection,
+  payload,
+  listName = null,
+}) {
   if (!isOpen) return null;
-
   return ReactDOM.createPortal(
-    <dialog className="fixed z-10 top-0" open={isOpen}>
-      <span className="block">Coba Pop Up</span>
-      <button
-        className="flex my-4 bg-slate-200 px-4 py-1.5 rounded-md border-2 border-slate-300 text-sm"
-        onClick={() => {
-          if (modalSection === MODAL_SECTION.LISTBODY_LISTMENU) {
-            return modalRegulator({
-              type: HANDLE_CASE_LISTMENU.MODAL,
-              payload: {
-                openModal: false,
-                confirm: false,
-                idForDelete: null,
-              },
-            });
-          }
-        }}
+    <div className="fixed flex items-center justify-center top-0 left-0 right-0 bottom-0 bg-extra-900 z-50">
+      <dialog
+        className="bg-primary text-tertiary-100 flex flex-col items-center justify-center w-full max-w-[300px] sm:max-w-[425px] sm:px-6 sm:py-8 rounded-md px-8 py-6 selection:bg-secondary-100"
+        open={isOpen}
       >
-        kembali
-      </button>
+        {/* Icon modal type */}
+        <img
+          src={listName ? deleteSingle : deleteAll}
+          width={ICON_MODAL_SIZE}
+        />
 
-      <button
-        className="flex my-4 bg-slate-200 px-4 py-1.5 rounded-md border-2 border-slate-300 text-sm"
-        onClick={() => {
-          if (modalSection === MODAL_SECTION.LISTBODY_LISTMENU) {
-            console.log(payload.modalData);
-            return modalRegulator({
-              type: HANDLE_CASE_LISTMENU.MODAL,
-              payload: {
-                openModal: false,
-                confirm: true,
-                idForDelete: payload.modalData.idForDelete,
-              },
-            });
-          }
-        }}
-      >
-        konfirmasi
-      </button>
-    </dialog>,
+        {/* Message */}
+        {listName ? (
+          <p className="my-4 text-center">
+            Hapus Kategori "
+            <span className="font-bold tracking-wider">{listName}</span>
+            "?
+            <br />
+            Mungkin saja ada tugas didalam kategori ini!
+          </p>
+        ) : (
+          <p className="my-4 text-center">
+            Hapus semua kategori? <br />
+            Semua tugas-tugas yang ada didalam kategori akan ikut terhapus!
+          </p>
+        )}
+
+        <div className="flex w-full justify-center items-center">
+          {/* Cancel Action */}
+          <button
+            className="flex bg-secondary-100 px-4 py-1.5 rounded-md border-2 border-secondary-150 text-sm mr-5"
+            onClick={() => {
+              if (modalSection === MODAL_SECTION.LISTBODY_LISTMENU) {
+                return modalRegulator({
+                  type: HANDLE_CASE_LISTMENU.MODAL,
+                  payload: {
+                    openModal: false,
+                    confirm: false,
+                    idForDelete: null,
+                  },
+                });
+              }
+
+              if (modalSection === MODAL_SECTION.LISTBODY_CLEAR) {
+                return modalRegulator({
+                  openModal: false,
+                  confirm: false,
+                });
+              }
+            }}
+          >
+            Batal
+          </button>
+
+          {/* Confirm Action */}
+          <button
+            className="flex bg-secondary-100 px-4 py-1.5 rounded-md border-2 border-secondary-150 text-sm"
+            onClick={() => {
+              if (modalSection === MODAL_SECTION.LISTBODY_LISTMENU) {
+                return modalRegulator({
+                  type: HANDLE_CASE_LISTMENU.MODAL,
+                  payload: {
+                    openModal: false,
+                    confirm: true,
+                    idForDelete: payload.modalData.idForDelete,
+                  },
+                });
+              }
+
+              if (modalSection === MODAL_SECTION.LISTBODY_CLEAR) {
+                return modalRegulator({
+                  openModal: false,
+                  confirm: true,
+                });
+              }
+            }}
+          >
+            Hapus
+          </button>
+        </div>
+      </dialog>
+    </div>,
     document.getElementById("portal")
   );
 }
@@ -260,11 +341,49 @@ function monthFormatter(monthNumber) {
   return month;
 }
 
+function dayFormatter(dayOfWeekNumber) {
+  let day = null;
+
+  switch (dayOfWeekNumber) {
+    case 1:
+      day = "Senin";
+      break;
+
+    case 2:
+      day = "Selasa";
+      break;
+
+    case 3:
+      day = "Rabu";
+      break;
+
+    case 4:
+      day = "Kamis";
+      break;
+
+    case 5:
+      day = "Jum'at";
+      break;
+
+    case 6:
+      day = "Sabtu";
+      break;
+
+    case 7:
+      day = "Minggu";
+      break;
+  }
+
+  return day;
+}
+
 function getDate() {
-  const { day, month, year } = Temporal.Now.plainDateISO();
-  const formattedMonth = monthFormatter(month);
-  const today = `${day} ${formattedMonth} ${year}`;
-  return today;
+  const { day, dayOfWeek, month, year } = Temporal.Now.plainDateISO();
+  const date = `${day} ${monthFormatter(month)} ${year}`;
+  return {
+    date,
+    day: dayFormatter(dayOfWeek),
+  };
 }
 
 export {
@@ -282,4 +401,5 @@ export {
   deleteFromLocale,
   ActionsModal,
   getDate,
+  sizeObserver,
 };

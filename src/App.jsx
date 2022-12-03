@@ -56,7 +56,6 @@ function reducer(state, { section, payload }) {
 
     case SECTION_COMPONENT.LIST:
       const { currentList, listDataFull } = payload;
-
       return {
         ...state,
         LIST_DATA: {

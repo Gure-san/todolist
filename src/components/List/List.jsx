@@ -11,7 +11,7 @@ import {
   saveSectionDataToLocale,
   getDate,
 } from "../../provider";
-import { reCreateData } from "./methods";
+import { HANDLE_CASE } from "./list_fractionCollection";
 
 const INITIAL_STATE = {
   listName: "",
@@ -20,15 +20,39 @@ const INITIAL_STATE = {
   dispatchDataList: false,
   fetchDataLocalComplete: false,
 };
-const HANDLE_CASE = {
-  CHANGE: "handle_change",
-  ADD: "handle_add",
-  SELECT: "handle_select",
-  EDIT: "handle_edit",
-  DELETE: "handle_delete",
-  CLEAR: "handle_clear",
-  GET: "handle_getFromLocale",
-};
+
+function reCreateData({ type, payload }) {
+  switch (type) {
+    case HANDLE_CASE.EDIT:
+      const editListData = payload.listData.map((list) => ({
+        ...list,
+        active: false,
+        listName: list.id === payload.id ? payload.value : list.listName,
+      }));
+
+      return editListData;
+
+    case HANDLE_CASE.SELECT:
+      const { listData, selectedList, prevSelectedList } = payload;
+      const resetSelectedData = listData.map((list) => {
+        if (listData.length <= 1 || selectedList === prevSelectedList)
+          return list;
+        return {
+          ...list,
+          active: false,
+        };
+      });
+
+      const dataWithSelectedList = resetSelectedData.map((list) => {
+        return {
+          ...list,
+          active: list.id === payload.id ? !list.active : list.active,
+        };
+      });
+
+      return dataWithSelectedList;
+  }
+}
 
 function reducer(state, { type, payload }) {
   switch (type) {
@@ -41,26 +65,61 @@ function reducer(state, { type, payload }) {
     case HANDLE_CASE.ADD:
       if (!payload) return state;
 
-      const data = [
+      const { date, day } = getDate();
+      const listData_add = [
         ...state.listData,
         {
           id: getUniqueId(),
           active: false,
           listName: payload,
-          date: getDate(),
+          date,
+          day,
         },
       ];
 
       saveSectionDataToLocale({
         section: SECTION_COMPONENT.LIST,
-        value: data,
+        value: listData_add,
       });
 
       return {
         ...state,
         listName: "",
-        listData: data,
+        listData: listData_add,
         dispatchDataList: false,
+      };
+
+    //Dispath Data List Event
+    case HANDLE_CASE.EDIT:
+      if (!payload || !payload.newListName) return state;
+
+      const listData_edit = state.listData.map((data) => {
+        if (data.id === payload.id) data.listName = payload.newListName;
+        return data;
+      });
+
+      saveSectionDataToLocale({
+        section: SECTION_COMPONENT.LIST,
+        value: listData_edit,
+      });
+
+      return {
+        ...state,
+        listName: "",
+        listData: listData_edit,
+        dispatchDataList: () => {
+          payload.dispatchApp({
+            section: SECTION_COMPONENT.LIST,
+            payload: {
+              currentList: getSelectedList(listData_edit),
+              listDataFull: {
+                listData: listData_edit,
+                idEditedList: state.currentIdSelectedList,
+                eventIndicator: HANDLE_CASE.EDIT,
+              },
+            },
+          });
+        },
       };
 
     //Dispath Data List Event
@@ -129,50 +188,50 @@ function reducer(state, { type, payload }) {
       };
 
     //Dispath Data List Event
-    case HANDLE_CASE.EDIT:
-      if (state.editModeState && payload.changeListData) {
-        const { value, listData, dispatchApp } = payload;
-        const listData_edit = reCreateData({
-          type: HANDLE_CASE.EDIT,
-          payload: { value, listData, id: state.currentIdSelectedList },
-        });
+    // case HANDLE_CASE.EDIT:
+    //   if (state.editModeState && payload.changeListData) {
+    //     const { value, listData, dispatchApp } = payload;
+    //     const listData_edit = reCreateData({
+    //       type: HANDLE_CASE.EDIT,
+    //       payload: { value, listData, id: state.currentIdSelectedList },
+    //     });
 
-        saveSectionDataToLocale({
-          section: SECTION_COMPONENT.LIST,
-          value: listData_edit,
-        });
+    //     saveSectionDataToLocale({
+    //       section: SECTION_COMPONENT.LIST,
+    //       value: listData_edit,
+    //     });
 
-        return {
-          ...state,
-          listName: "",
-          listData: listData_edit,
-          dispatchDataList: () => {
-            dispatchApp({
-              section: SECTION_COMPONENT.LIST,
-              payload: {
-                currentList: getSelectedList(listData_edit),
-                listDataFull: {
-                  listData: listData_edit,
-                  idEditedList: state.currentIdSelectedList,
-                  eventIndicator: HANDLE_CASE.EDIT,
-                },
-              },
-            });
-          },
-          editModeState: false,
-        };
-      }
+    //     return {
+    //       ...state,
+    //       listName: "",
+    //       listData: listData_edit,
+    //       dispatchDataList: () => {
+    //         dispatchApp({
+    //           section: SECTION_COMPONENT.LIST,
+    //           payload: {
+    //             currentList: getSelectedList(listData_edit),
+    //             listDataFull: {
+    //               listData: listData_edit,
+    //               idEditedList: state.currentIdSelectedList,
+    //               eventIndicator: HANDLE_CASE.EDIT,
+    //             },
+    //           },
+    //         });
+    //       },
+    //       editModeState: false,
+    //     };
+    //   }
 
-      return {
-        ...state,
-        listName: payload.listName,
-        dispatchDataList: false,
-        editModeState: {
-          editMode: true,
-          changeListData: false,
-          elementToFocus: payload.element,
-        },
-      };
+    // return {
+    //   ...state,
+    //   listName: payload.listName,
+    //   dispatchDataList: false,
+    //   editModeState: {
+    //     editMode: true,
+    //     changeListData: false,
+    //     elementToFocus: payload.element,
+    //   },
+    // };
 
     //Dispath Data List Event
     case HANDLE_CASE.SELECT:
@@ -270,13 +329,6 @@ function List({ dispatchApp, appData }) {
         });
       }
     }
-
-    // Edit Mode
-    if (editModeState && editModeState.editMode) {
-      editModeState.elementToFocus.selectionStart = 0;
-      editModeState.elementToFocus.selectionEnd = listName.length;
-      editModeState.elementToFocus.focus();
-    }
   }, [editModeState, dispatchDataList]);
 
   return (
@@ -303,54 +355,8 @@ function List({ dispatchApp, appData }) {
           dispatchApp,
         }}
       />
-
-      {/* {!listData.length ? (
-        <EmptyListCover />
-      ) : (
-        <ul className="my-4" id="ListContainer">
-          {listData.map(({ id, listName, active, date }) => (
-            <li key={id}>
-              <label
-                className="selection:bg-transparent"
-                htmlFor={`list-${id}`}>
-                <input
-                  id={`list-${id}`}
-                  className="mr-2"
-                  type="checkbox"
-                  checked={active}
-                  onChange={(e) =>
-                    setListsData({
-                      type: HANDLE_CASE.SELECT,
-                      payload: {
-                        id,
-                        listData,
-                        selectedList: e.target,
-                        dispatchApp
-                      },
-                    })
-                  }
-                />
-                {listName} - {date} */}
-
-      {/* Action Buttons */}
-      {/* {active && (
-                  <ActionListButtons
-                    dispatch={{ setListsData, dispatchApp }}
-                    idForDelete={id}
-                    elementToFocus={inputFormElement.current}
-                    listNameForEdit={listName}
-                  />
-                )}
-              </label>
-            </li>
-          ))}
-        </ul>
-      )} */}
-
-      {/* Clear List Menu */}
-      {/* <ClearListButton dispatch={{ setListsData, dispatchApp }} listData={listData}/> */}
     </section>
   );
 }
 
-export { List, HANDLE_CASE };
+export { List };
