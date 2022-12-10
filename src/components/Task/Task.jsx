@@ -7,61 +7,49 @@ import {
   saveSectionDataToLocale,
   SECTION_COMPONENT,
 } from "../../provider";
-import {
-  SubmitTaskFormButton,
-  ClearTaskButton,
-  DeleteTaskButton
-} from './TaskActionButtons';
-import {
-  infoTaskUpdater
-} from './methods';
-import TasksMenu from "./TasksMenu";
-import TasksInfo from "./TasksInfo";
+import { HANDLE_CASE, infoTaskUpdater } from "./task_fractionCollections";
+import TaskHead from "./Head/TaskHead";
+import TaskBody from "./Body/TaskBody";
 
 const INITIAL_STATE = {
-  taskName : "",
-  taskData : [],
-  selectedListName : "",
-  editModeState : false,
-  fetchDataFromLocalComplete : false
-}
+  taskName: "",
+  taskData: [],
+  selectedListName: "",
+  editModeState: false,
+  fetchDataFromLocalComplete: false,
+};
 
-const HANDLE_CASE = {
-  COMPLETE : 'handle_complete',
-  CLEAR : 'handle_clear',
-  DELETE : 'handle_delete',
-  ADD : 'handle_add',
-  EDIT : 'handle_edit',
-  CHANGE : 'handle_change',
-  GET : 'handle_get',
-}
-
-function reducer(state, {type, payload}) {
-  switch(type) {
-    case HANDLE_CASE.CHANGE :
+function reducer(state, { type, payload }) {
+  switch (type) {
+    case HANDLE_CASE.CHANGE:
       return {
         ...state,
-        taskName : payload
-      }
-
-    case HANDLE_CASE.ADD :
-      if(payload.currentList === null || payload.taskName === "") return {
-        ...state,
-        taskName : ""
+        taskName: payload,
       };
 
-      const {currentList, taskName} = payload;
+    case HANDLE_CASE.ADD:
+      if (payload.currentList === null || payload.taskName === "")
+        return {
+          ...state,
+          taskName: "",
+        };
+
+      const { currentList, taskName } = payload;
 
       // Check Previous Task Data
-      if(state.taskData && state.taskData.length !== 0 && state.taskData.some((data) => data.id === currentList.id)) {
-        const taskData_add = state.taskData.map(data => {
-          if(data.id === currentList.id) {
+      if (
+        state.taskData &&
+        state.taskData.length !== 0 &&
+        state.taskData.some((data) => data.id === currentList.id)
+      ) {
+        const taskData_add = state.taskData.map((data) => {
+          if (data.id === currentList.id) {
             const newTask = {
               taskName,
-              complete : false,
-              id : getUniqueId()
+              complete: false,
+              id: getUniqueId(),
             };
-            
+
             // update tasks section
             data.tasks.push(newTask);
           }
@@ -72,51 +60,51 @@ function reducer(state, {type, payload}) {
         });
 
         saveSectionDataToLocale({
-          section : SECTION_COMPONENT.TASK,
-          value : taskData_add
+          section: SECTION_COMPONENT.TASK,
+          value: taskData_add,
         });
 
         return {
           ...state,
-          taskData : taskData_add,
-          taskName : ""
-        }
+          taskData: taskData_add,
+          taskName: "",
+        };
       }
 
       const initialTaskDataStructure = [
         ...state.taskData,
         {
-          listName : currentList.listName,
-          id : currentList.id,
-          tasks : [
+          listName: currentList.listName,
+          id: currentList.id,
+          tasks: [
             {
               taskName,
-              complete : false,
-              id : getUniqueId()
-            }
+              complete: false,
+              id: getUniqueId(),
+            },
           ],
-          tasksAmount : 1,
-          completedTasks : 0,
-          uncompletedTasks : 1 
-        }
+          tasksAmount: 1,
+          completedTasks: 0,
+          uncompletedTasks: 1,
+        },
       ];
 
       saveSectionDataToLocale({
-        section : SECTION_COMPONENT.TASK,
-        value : initialTaskDataStructure
+        section: SECTION_COMPONENT.TASK,
+        value: initialTaskDataStructure,
       });
 
       return {
         ...state,
-        taskData : initialTaskDataStructure,
-        taskName : ""
-      }
+        taskData: initialTaskDataStructure,
+        taskName: "",
+      };
 
-    case HANDLE_CASE.COMPLETE : 
-      const taskData_complete = state.taskData.map(outerData => {
-        if(outerData.id === payload.currentList.id) {
-          outerData.tasks.map(task => {
-            if(task.id === payload.id) task.complete = !task.complete;
+    case HANDLE_CASE.COMPLETE:
+      const taskData_complete = state.taskData.map((outerData) => {
+        if (outerData.id === payload.currentList.id) {
+          outerData.tasks.map((task) => {
+            if (task.id === payload.id) task.complete = !task.complete;
             return task;
           });
         }
@@ -127,21 +115,23 @@ function reducer(state, {type, payload}) {
       });
 
       saveSectionDataToLocale({
-        section : SECTION_COMPONENT.TASK,
-        value : taskData_complete
+        section: SECTION_COMPONENT.TASK,
+        value: taskData_complete,
       });
 
       return {
         ...state,
-        taskData : taskData_complete
+        taskData: taskData_complete,
       };
 
-    case HANDLE_CASE.DELETE :
-      if(!payload || !state.taskData.length) return state;
+    case HANDLE_CASE.DELETE:
+      if (!payload || !state.taskData.length) return state;
 
-      const taskData_delete = state.taskData.map(data => {
-        if(data.id === payload.id) {
-          const newDataForTasksSection = data.tasks.filter(({complete}) => complete === false);
+      const taskData_delete = state.taskData.map((data) => {
+        if (data.id === payload.id) {
+          const newDataForTasksSection = data.tasks.filter(
+            ({ complete }) => complete === false
+          );
           data.tasks = newDataForTasksSection;
         }
 
@@ -151,20 +141,20 @@ function reducer(state, {type, payload}) {
       });
 
       saveSectionDataToLocale({
-        section : SECTION_COMPONENT.TASK,
-        value : taskData_delete
-      })
+        section: SECTION_COMPONENT.TASK,
+        value: taskData_delete,
+      });
 
       return {
         ...state,
-        taskData : taskData_delete
+        taskData: taskData_delete,
       };
 
-    case HANDLE_CASE.CLEAR :
-      if(!payload) return state;
+    case HANDLE_CASE.CLEAR:
+      if (!payload) return state;
 
-      const taskData_clear = state.taskData.map(data => {
-        if(data.id === payload.id && data.tasks.length) {
+      const taskData_clear = state.taskData.map((data) => {
+        if (data.id === payload.id && data.tasks.length) {
           const lengthTasksData = data.tasks.length;
           data.tasks.splice(0, lengthTasksData);
         }
@@ -175,76 +165,88 @@ function reducer(state, {type, payload}) {
       });
 
       saveSectionDataToLocale({
-        section : SECTION_COMPONENT.TASK,
-        value : taskData_clear
+        section: SECTION_COMPONENT.TASK,
+        value: taskData_clear,
       });
 
       return {
         ...state,
-        taskData : taskData_clear,
-        taskName : ""
+        taskData: taskData_clear,
+        taskName: "",
       };
 
     // Selected List
-    case HANDLE_CASE.GET :
-      const {currentDataList, listDataFull} = payload;
+    case HANDLE_CASE.GET:
+      const { currentDataList, listDataFull } = payload;
 
-      if(!state.fetchDataFromLocalComplete) {
+      if (!state.fetchDataFromLocalComplete) {
         const taskData_get = getFromLocale(KEY_STORE);
-        if(taskData_get && taskData_get['task']) {
-          const selectedList = getSelectedList(taskData_get['list']);
+        if (taskData_get && taskData_get["task"]) {
+          const selectedList = getSelectedList(taskData_get["list"]);
           return {
             ...state,
-            selectedListName : selectedList.listName,
-            taskData : taskData_get['task'] || [],
-            fetchDataFromLocalComplete : true
-          }
+            selectedListName: selectedList.listName,
+            taskData: taskData_get["task"] || [],
+            fetchDataFromLocalComplete: true,
+          };
         }
 
         return {
           ...state,
-          selectedListName : "",
-          fetchDataFromLocalComplete : true,
-        }
+          selectedListName: "",
+          fetchDataFromLocalComplete: true,
+        };
       }
 
       // Synchronize Task Data with List Data
-      if(listDataFull && !Array.isArray(listDataFull) && listDataFull.eventIndicator) {
+      if (
+        listDataFull &&
+        !Array.isArray(listDataFull) &&
+        listDataFull.eventIndicator
+      ) {
         // Remove List Data
-        if(listDataFull.eventIndicator === HANDLE_CASE.DELETE || listDataFull.eventIndicator === HANDLE_CASE.CLEAR) {
-          const {listData, trash_idDeletedList} = listDataFull;  
+        if (
+          listDataFull.eventIndicator === HANDLE_CASE.DELETE ||
+          listDataFull.eventIndicator === HANDLE_CASE.CLEAR
+        ) {
+          const { listData, trash_idDeletedList } = listDataFull;
 
           // Clear Action || Empty Task Data
-          if(!listData.length || !state.taskData.length) {
+          if (!listData.length || !state.taskData.length) {
             return {
               ...state,
-              selectedListName : "",
-              taskName : "",
-              taskData : []
-            }
+              selectedListName: "",
+              taskName: "",
+              taskData: [],
+            };
           }
 
           // Delete Action
-          const taskData_removeDataList = state.taskData.filter(({id}) => id !== trash_idDeletedList);
-          
+          const taskData_removeDataList = state.taskData.filter(
+            ({ id }) => id !== trash_idDeletedList
+          );
+
           saveSectionDataToLocale({
-            section : SECTION_COMPONENT.TASK,
-            value : taskData_removeDataList
+            section: SECTION_COMPONENT.TASK,
+            value: taskData_removeDataList,
           });
 
           return {
             ...state,
-            selectedListName : "",
-            taskData : taskData_removeDataList
-          }
+            selectedListName: "",
+            taskData: taskData_removeDataList,
+          };
         }
 
         // Edit List Data
-        if(listDataFull.eventIndicator === HANDLE_CASE.EDIT) {
-          const {listData, idEditedList} = payload.listDataFull;
-          const taskData_editedList = state.taskData.map(data => {
-            if(data.id === idEditedList) {
-              const listNameOfeditedList = listData.filter(({id}) => id === idEditedList)[0]['listName'];
+        if (listDataFull.eventIndicator === HANDLE_CASE.EDIT) {
+          let newSelectedListName = null;
+          const { listData, idEditedList } = payload.listDataFull;
+          const taskData_editedList = state.taskData.map((data) => {
+            if (data.id === idEditedList) {
+              const listNameOfeditedList = listData.filter(
+                ({ id }) => id === idEditedList
+              )[0]["listName"];
               data.listName = listNameOfeditedList;
             }
 
@@ -252,112 +254,67 @@ function reducer(state, {type, payload}) {
           });
 
           saveSectionDataToLocale({
-            section : SECTION_COMPONENT.TASK,
-            value : taskData_editedList
+            section: SECTION_COMPONENT.TASK,
+            value: taskData_editedList,
           });
-
-          console.log(state.taskData)
 
           return {
             ...state,
-            selectedListName : "",
-            taskData : taskData_editedList
-          }
+            selectedListName: payload.currentDataList.listName || "",
+            taskData: taskData_editedList,
+          };
         }
       }
-      
-      if(!currentDataList) return {
-        ...state,
-        selectedListName : ""
-      }
+
+      if (!currentDataList)
+        return {
+          ...state,
+          selectedListName: "",
+        };
 
       return {
         ...state,
-        selectedListName : currentDataList.listName
-      }
-    
-    default :
+        selectedListName: currentDataList.listName,
+      };
+
+    default:
       return state;
   }
 }
 
-function Task({ dispatchTask, currentDataList, listDataFull }) {
-  const [{selectedListName, taskName, taskData, editModeState}, setTaskData] = useReducer(reducer, INITIAL_STATE);
+function Task({ dispatchApp, currentDataList, listDataFull, appData }) {
+  const [{ selectedListName, taskName, taskData, editModeState }, setTaskData] =
+    useReducer(reducer, INITIAL_STATE);
 
   useEffect(() => {
     setTaskData({
-      type : HANDLE_CASE.GET,
-      payload : {
+      type: HANDLE_CASE.GET,
+      payload: {
         currentDataList,
-        listDataFull
-      }
+        listDataFull,
+      },
     });
   }, [currentDataList, listDataFull]);
 
   return (
-    <div className="m-8">
-      <h1 className="text-2xl">Tugas</h1>
+    <section className="mb-8">
+      {/* Task Head */}
+      <TaskHead
+        currentDataList={currentDataList}
+        selectedListName={selectedListName}
+        taskName={taskName}
+        dispatch={setTaskData}
+      />
 
-      {/* Task title */}
-      <h1 className="my-4 font-semibold">
-        {selectedListName ? 
-        `◈ ${selectedListName}` :
-        'Belum ada list yang dipilih!'} 
-      </h1>
-
-      {/* Task Menu */}
-      <TasksMenu taskData={taskData} currentList={currentDataList} dispatch={setTaskData} />
-
-      {/* Tasks Info */}
-      <TasksInfo taskData={taskData} currentList={currentDataList}/>
-
-      {/* Task Form */}
-      <form
-        className="flex"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setTaskData({
-            type : HANDLE_CASE.ADD,
-            payload : {
-              currentList : currentDataList,
-              taskName
-            }
-          })
-        }}>
-        <label htmlFor="addTask">
-          Tambah Tugas :
-          <input
-            id="addTask"
-            autoComplete="off"
-            className="outline-none mx-2 px-2 border-b-2 
-          border-slate-800"
-            type="text"
-            onChange={(e) => {
-              setTaskData({
-                type : HANDLE_CASE.CHANGE,
-                payload : e.target.value
-              })
-            }}
-            value={taskName}
-          />
-        </label>
-
-        <SubmitTaskFormButton dispatch={setTaskData} payload={{ 
-          currentList : currentDataList,
-          taskName
-        }}/>
-      </form>
-
-      {/* Clear All Task */}
-      <ClearTaskButton dispatch={setTaskData} payload={currentDataList} taskData={taskData}/>
-
-      {/* Delete All Selected Tasks */}
-      <DeleteTaskButton dispatch={setTaskData} payload={currentDataList}/>
-    </div>
-  )
+      {/* Task Body */}
+      <TaskBody
+        taskData={taskData}
+        currentList={currentDataList}
+        dispatch={setTaskData}
+        appData={appData}
+      />
+    </section>
+  );
 }
 
-export {
-  Task,
-  HANDLE_CASE
-}
+export { Task };

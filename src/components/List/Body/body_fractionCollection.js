@@ -17,12 +17,6 @@ const LISTMENU_TYPE = {
   COLLAPSIBLE: "collapsible",
 };
 
-const SEPARATOR_TYPE = {
-  NORMAL: "normal",
-  LISTNAME_LISTDATE: "listName_listDate",
-  CLEAR: "clear",
-};
-
 function displayImplementer(data) {
   return data.forEach(({ active, collapsibleElements }) => {
     const { separator, collapsibleElement } = collapsibleElements;
@@ -39,19 +33,19 @@ function displayImplementer(data) {
 function getEditIconSrc(theme, editModeData, currentId) {
   let src = null;
 
-  if (!editModeData.active && editModeData.idListMenu !== currentId) {
-    src = theme === THEME_VARIANTS.DARK_MODE ? editDark : editLight;
+  if (editModeData.active && editModeData.idListMenu === currentId) {
+    src =
+      theme === THEME_VARIANTS.DARK_MODE ? confirmEditDark : confirmEditLight;
     return src;
   }
 
-  src = theme === THEME_VARIANTS.DARK_MODE ? confirmEditDark : confirmEditLight;
+  src = theme === THEME_VARIANTS.DARK_MODE ? editDark : editLight;
   return src;
 }
 
 export {
   HANDLE_CASE_LISTMENU,
   LISTMENU_TYPE,
-  SEPARATOR_TYPE,
   displayImplementer,
   getEditIconSrc,
 };

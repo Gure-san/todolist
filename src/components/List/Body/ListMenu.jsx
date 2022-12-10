@@ -6,20 +6,20 @@ import editDark from "../../../assets/List-Section/edit-dark.png";
 import editLight from "../../../assets/List-Section/edit-light.png";
 import confirmEditDark from "../../../assets/List-Section/confirm-dark.png";
 import confirmEditLight from "../../../assets/List-Section/confirm-light.png";
-import { Separator } from "./Separator";
 import { HANDLE_CASE } from "../list_fractionCollection";
 import {
-  ActionsModal,
-  SECTION_COMPONENT,
   MODAL_SECTION,
+  SECTION_COMPONENT,
+  SEPARATOR_TYPE,
   THEME_VARIANTS,
+  ActionsModal,
+  Separator,
 } from "../../../provider";
 import {
   displayImplementer,
   getEditIconSrc,
   HANDLE_CASE_LISTMENU,
   LISTMENU_TYPE,
-  SEPARATOR_TYPE,
 } from "./body_fractionCollection";
 
 const ROOT_ELEMENT = document.getElementById("root");
@@ -45,6 +45,16 @@ const INITIALSTATE_LISTMENU = {
 function reducer(state, { type, payload }) {
   switch (type) {
     case HANDLE_CASE_LISTMENU.COLLAPSE:
+      // reset collapse data
+      if (typeof payload === "object" && payload.reset) {
+        return {
+          ...state,
+          collapseData: INITIALSTATE_LISTMENU.collapseData,
+          editModeState: INITIALSTATE_LISTMENU.editModeState,
+          newListName: INITIALSTATE_LISTMENU.newListName,
+        };
+      }
+
       const twinIdData = state.collapseData.some(({ id }) => id === payload);
 
       if (twinIdData) {
@@ -134,6 +144,7 @@ function reducer(state, { type, payload }) {
 
       return {
         ...state,
+        newListName: payload.listName,
         editModeState: listMenuData_Edit,
       };
 
@@ -155,16 +166,32 @@ function ListMenu({ type, derivedItems, dispatch, appData }) {
   ] = useReducer(reducer, INITIALSTATE_LISTMENU);
 
   useEffect(() => {
+    // Handle collapse data
+    if (type === LISTMENU_TYPE.NORMAL && collapseData.length > 0) {
+      setListMenuData({
+        type: HANDLE_CASE_LISTMENU.COLLAPSE,
+        payload: {
+          reset: true,
+        },
+      });
+    }
+
     // Handle Edit Mode State
     const resetEditModeState = !editModeState.active
       ? null
       : (e) => {
+          console.dir(e.target);
+          const buttonEdit = document.getElementById(
+            `buttonEdit-${editModeState.idListMenu}`
+          );
           const editModeElements = [
             editModeState.inputElement,
+            buttonEdit,
+            buttonEdit.firstElementChild,
             document.getElementById(
               `hiddenSubmitEditMode-${editModeState.idListMenu}`
             ),
-            document.getElementById(`buttonEdit-${editModeState.idListMenu}`),
+            ,
           ];
           if (!editModeElements.some((element) => element === e.target)) {
             ROOT_ELEMENT.removeEventListener("click", resetEditModeState);
@@ -211,7 +238,7 @@ function ListMenu({ type, derivedItems, dispatch, appData }) {
         },
       });
     }
-  }, [modalData, editModeState]);
+  }, [modalData, editModeState, type]);
 
   switch (type) {
     case LISTMENU_TYPE.NORMAL:
@@ -345,12 +372,13 @@ function ListMenu({ type, derivedItems, dispatch, appData }) {
 
                       {/* Delete List Category */}
                       {/* Pop Up Confirm Action */}
-                      {modalData.openModal && !modalData.confirm ? (
+                      {modalData.openModal && modalData.idForDelete === id ? (
                         <ActionsModal
                           modalSection={MODAL_SECTION.LISTBODY_LISTMENU}
                           isOpen={modalData.openModal}
                           modalRegulator={setListMenuData}
                           payload={{ modalData }}
+                          listName={listName}
                         />
                       ) : null}
                       <button
@@ -446,7 +474,7 @@ function ListMenu({ type, derivedItems, dispatch, appData }) {
                       className="flex flex-col w-full dark:bg-secondary-100 bg-tertiary-150 rounded-md px-5 py-2 duration-300"
                     >
                       {/* First Part */}
-                      <section className="flex justify-between items-end p w-full">
+                      <section className="flex justify-between items-end w-full">
                         {/* List Name */}
                         <div>
                           <input
@@ -472,7 +500,7 @@ function ListMenu({ type, derivedItems, dispatch, appData }) {
                                 : true
                             }
                             value={
-                              newListName &&
+                              (newListName || newListName === "") &&
                               editModeState.active &&
                               editModeState.idListMenu === id
                                 ? newListName
@@ -510,7 +538,7 @@ function ListMenu({ type, derivedItems, dispatch, appData }) {
 
                       {/* Separator */}
                       <Separator
-                        derivedItems={{ hasId: true, id }}
+                        payload={{ hasId: true, id }}
                         type={SEPARATOR_TYPE.NORMAL}
                         extraStyle={`hidden my-2 bg-secondary-150`}
                       />
@@ -540,6 +568,7 @@ function ListMenu({ type, derivedItems, dispatch, appData }) {
                                   inputElement: document.getElementById(
                                     `listName-${id}`
                                   ),
+                                  newListName,
                                 },
                               })
                             }

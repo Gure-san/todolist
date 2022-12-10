@@ -4,7 +4,6 @@ import ListBody from "./Body/ListBody";
 import {
   KEY_STORE,
   SECTION_COMPONENT,
-  deleteFromLocale,
   getFromLocale,
   getUniqueId,
   getSelectedList,
@@ -188,52 +187,6 @@ function reducer(state, { type, payload }) {
       };
 
     //Dispath Data List Event
-    // case HANDLE_CASE.EDIT:
-    //   if (state.editModeState && payload.changeListData) {
-    //     const { value, listData, dispatchApp } = payload;
-    //     const listData_edit = reCreateData({
-    //       type: HANDLE_CASE.EDIT,
-    //       payload: { value, listData, id: state.currentIdSelectedList },
-    //     });
-
-    //     saveSectionDataToLocale({
-    //       section: SECTION_COMPONENT.LIST,
-    //       value: listData_edit,
-    //     });
-
-    //     return {
-    //       ...state,
-    //       listName: "",
-    //       listData: listData_edit,
-    //       dispatchDataList: () => {
-    //         dispatchApp({
-    //           section: SECTION_COMPONENT.LIST,
-    //           payload: {
-    //             currentList: getSelectedList(listData_edit),
-    //             listDataFull: {
-    //               listData: listData_edit,
-    //               idEditedList: state.currentIdSelectedList,
-    //               eventIndicator: HANDLE_CASE.EDIT,
-    //             },
-    //           },
-    //         });
-    //       },
-    //       editModeState: false,
-    //     };
-    //   }
-
-    // return {
-    //   ...state,
-    //   listName: payload.listName,
-    //   dispatchDataList: false,
-    //   editModeState: {
-    //     editMode: true,
-    //     changeListData: false,
-    //     elementToFocus: payload.element,
-    //   },
-    // };
-
-    //Dispath Data List Event
     case HANDLE_CASE.SELECT:
       const { listData, selectedList, dispatchApp } = payload;
       const listData_select = reCreateData({
@@ -332,7 +285,7 @@ function List({ dispatchApp, appData }) {
   }, [editModeState, dispatchDataList]);
 
   return (
-    <section className="pb-4">
+    <section>
       {/* List - Head */}
       <ListHead
         appData={appData}

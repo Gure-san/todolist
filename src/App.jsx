@@ -3,6 +3,7 @@ import { useReducer, useEffect } from "react";
 import { List } from "./components/List";
 import { Task } from "./components/Task";
 import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
 import {
   SECTION_COMPONENT,
   THEME_VARIANTS,
@@ -108,10 +109,13 @@ function App() {
     <React.Fragment>
       <Header dispatchApp={setData} appData={APP_DATA} />
       <List dispatchApp={setData} appData={APP_DATA} />
-      {/* <Task 
-      listDataFull={!LIST_DATA ? LIST_DATA : LIST_DATA.listDataFull}
-      currentDataList={!LIST_DATA ? LIST_DATA : LIST_DATA.currentList}
-      dispatchTask={setData}/> */}
+      <Task
+        listDataFull={!LIST_DATA ? LIST_DATA : LIST_DATA.listDataFull}
+        currentDataList={!LIST_DATA ? LIST_DATA : LIST_DATA.currentList}
+        dispatchApp={setData}
+        appData={APP_DATA}
+      />
+      <Footer />
     </React.Fragment>
   );
 }

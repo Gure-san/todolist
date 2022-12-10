@@ -77,14 +77,15 @@ function Header({ appData, dispatchApp }) {
       <div>
         {/* Theme Toggle */}
         <button
-          onClick={() =>
-            eventAppConfig({
-              dispatch: dispatchApp,
-              configType: CONFIG_ACTIONS.THEME,
-              value: themeValueForDispatchApp,
-              appData,
-            })
-          }
+          // Proses Perbaikan Tema Terang
+          // onClick={() =>
+          //   eventAppConfig({
+          //     dispatch: dispatchApp,
+          //     configType: CONFIG_ACTIONS.THEME,
+          //     value: themeValueForDispatchApp,
+          //     appData,
+          //   })
+          // }
           title={titleThemeToggle}
           className={`${styleAppConfigBtns} selection:bg-transparent p-2.5 rounded-full cursor-pointer duration-100 border-2 mr-2.5 active:translate-y-0.5`}
         >

@@ -36,7 +36,7 @@ export default function ListHead({ appData, dispatch, derivedItems }) {
   }
 
   return (
-    <section className="flex justify-between items-center flex-wrap w-full pr-1">
+    <section className="flex justify-between items-center flex-wrap w-full">
       {/* Section Name */}
       <h1
         className={`${styleHeadSection.title} font-bold text-xl tracking-wider`}
@@ -46,7 +46,7 @@ export default function ListHead({ appData, dispatch, derivedItems }) {
 
       {/* Form Add List Category */}
       <form
-        className="flex items-center sm:w-1/2 sm:my-0 w-full mt-4"
+        className="flex items-center sm:w-1/2 sm:my-0 w-full mt-2"
         onSubmit={(e) => {
           e.preventDefault();
           dispatch({
